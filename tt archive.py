@@ -1,3 +1,6 @@
+#! python3.5
+# tt archive.py - Uses Spotipy to backup Spotify Throwback Thursday playlists
+
 import sys
 import os
 import pprint
@@ -5,13 +8,16 @@ import datetime
 import spotipy
 import spotipy.util as util
 
-user = 'paralysedbeaver'
-scope = 'playlist-modify-public'
-token = util.prompt_for_user_token(user, scope)
+user = 'paralysedbeaver' # Current users username. TODO: Ask user for their username
+scope = 'playlist-modify-public' # Scope required to create/edit playlists
+token = util.prompt_for_user_token(user, scope) # Get token
+
+# Explicit statement of playlists wanted
+# TODO: Ask the user for the playlist they want to copy
 playlists = {'spotify': '4ORiMCgOe6UxBDqW8SF1Lm',
              'spotify_uk_': '3fFwkB1IzcZlvYZEuiDzUU'}
-#playlists = {'spotify': '4ORiMCgOe6UxBDqW8SF1Lm'}
 
+# Helper function to print all tracks in a playlist including artist(s)
 def display_playlist_tracks(pl):
     print('Playlist Name: ' + pl['name'])
     print()
@@ -23,6 +29,8 @@ def display_playlist_tracks(pl):
     print('Total Tracks: ' + str(pl['tracks']['total']))
     print()
 
+# Function to create empty playlist, if it doesn't already exist
+# Requires the username, source playlist ID, and new name for the playlist
 def empty_dup(src_user, src_pl, name):
     global user_pls
     if name not in [i['name'] for i in user_pls['items']]:
@@ -30,6 +38,8 @@ def empty_dup(src_user, src_pl, name):
         sp.user_playlist_create(user,name)
         user_pls = sp.user_playlists(user)
 
+# Function to create the name of the archived playlist
+# Requires playlist dictionary
 def pl_name(pl):
     date = pl['tracks']['items'][0]['added_at']
     date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%SZ')
@@ -41,12 +51,15 @@ def pl_name(pl):
     name = owner + ' ' + title + ' ' + date 
     return name
 
+# Returns a list of track ID's containing all the tracks in the source playlist
 def tracks(pl):
     return [i['track']['id'] for i in pl['tracks']['items']]
 
+# Return the playlist ID of the newly created playlist, needed to add tracks to it
 def plid(name, pls):
     return ''.join([i['id'] for i in pls['items'] if i['name'] == name])
 
+# Requires source playlist, new name of the playlist, and playlist dictionary containing all of users playlists.
 def add_tracks(pl, name, pls):
     track_list = tracks(pl)
     pl_id = plid(name, pls)
